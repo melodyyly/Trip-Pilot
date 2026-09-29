@@ -105,3 +105,5 @@ Trip-Pilot/
     ├── api_design.md
     └── sequence_diagrams.md
 ```
+##Reference
+[TripPilot_Corporate_Travel_Policy_v2.docx](https://github.com/user-attachments/files/32784763/TripPilot_Corporate_Travel_Policy_v2.docx)
