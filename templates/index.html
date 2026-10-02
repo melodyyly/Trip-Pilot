@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>TripPilot AI</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+        }
+
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 80px);
+        }
+
+        .sidebar {
+            width: 320px;
+            background: white;
+            border-right: 1px solid #ddd;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .chat-box {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            white-space: pre-wrap;
+        }
+
+        .user {
+            background: #dbeafe;
+        }
+
+        .agent {
+            background: #dcfce7;
+        }
+
+        .input-bar {
+            display: flex;
+            margin-top: 16px;
+            gap: 10px;
+        }
+
+        .input-bar input {
+            flex: 1;
+            padding: 12px;
+            font-size: 14px;
+        }
+
+        .input-bar button {
+            width: 120px;
+            border: none;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        .step {
+            padding: 10px;
+            background: #eff6ff;
+            margin-bottom: 8px;
+            border-left: 4px solid #2563eb;
+            border-radius: 4px;
+        }
+
+        .flight-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+
+        @media (max-width: 900px) {
+
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: 250px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>✈️ TripPilot AI Agent</h1>
+</div>
+
+<div class="container">
+
+    <div class="sidebar">
+
+        <h3>Agent Activity</h3>
+
+        <div id="steps">
+            <div class="step">
+                Waiting for agent...
+            </div>
+        </div>
+
+        <hr>
+
+        <h3>Flight Results</h3>
+
+        <div id="flights"></div>
+
+    </div>
+
+    <div class="main">
+
+        <div
+            class="chat-box"
+            id="chatBox">
+
+            <div class="message agent">
+                👋 Welcome to TripPilot.
+                Ask me to find a flight.
+            </div>
+
+        </div>
+
+        <div class="input-bar">
+
+            <input
+                id="message"
+                type="text"
+                placeholder="Find me a flight from Hong Kong to London on 15 Nov 2026">
+
+            <button onclick="sendMessage()">
+                Send
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+function addMessage(text, type) {
+
+    const chatBox =
+        document.getElementById(
+            "chatBox"
+        );
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+    div.className =
+        "message " + type;
+
+    div.textContent =
+        (type === "user" ? "👤 " : "🤖 ")
+        + text;
+
+    chatBox.appendChild(div);
+
+    chatBox.scrollTop =
+        chatBox.scrollHeight;
+}
+
+async function sendMessage() {
+
+    const input =
+        document.getElementById(
+            "message"
+        );
+
+    const message =
+        input.value.trim();
+
+    if (!message) {
+        return;
+    }
+
+    addMessage(message, "user");
+
+    input.value = "";
+
+    const loading =
+        document.createElement("div");
+
+    loading.className =
+        "message agent loading";
+
+    loading.id = "loading";
+
+    loading.textContent =
+        "🤖 Thinking...";
+
+    document
+        .getElementById("chatBox")
+        .appendChild(loading);
+
+    try {
+
+        const response =
+            await fetch("/chat", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+                    message: message
+                })
+
+            });
+
+        const data =
+            await response.json();
+
+        document
+            .getElementById("loading")
+            .remove();
+
+        addMessage(
+            data.recommendation ||
+            data.reply ||
+            JSON.stringify(data),
+            "agent"
+        );
+
+        renderSteps(
+            data.agent_steps || []
+        );
+
+        renderFlights(
+            data.flights || []
+        );
+
+    } catch (error) {
+
+        document
+            .getElementById("loading")
+            .remove();
+
+        addMessage(
+            "Error calling server.",
+            "agent"
+        );
+
+        console.error(error);
+    }
+}
+
+function renderSteps(steps) {
+
+    const div =
+        document.getElementById(
+            "steps"
+        );
+
+    div.innerHTML = "";
+
+    steps.forEach(step => {
+
+        div.innerHTML += `
+            <div class="step">
+                ✅ ${step}
+            </div>
+        `;
+    });
+}
+
+function renderFlights(flights) {
+
+    const div =
+        document.getElementById(
+            "flights"
+        );
+
+    div.innerHTML = "";
+
+    flights.forEach(flight => {
+
+        div.innerHTML += `
+            <div class="flight-card">
+
+                <strong>
+                    ${flight.airline || "Unknown Airline"}
+                </strong>
+
+                <br>
+
+                ${flight.price || ""}
+                ${flight.currency || ""}
+
+            </div>
+        `;
+    });
+}
+
+document
+    .getElementById("message")
+    .addEventListener(
+        "keypress",
+        function(event) {
+
+            if (
+                event.key === "Enter"
+            ) {
+                sendMessage();
+            }
+        }
+    );
+
+</script>
+
+</body>
+</html>

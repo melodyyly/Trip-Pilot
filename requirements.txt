@@ -1,5 +1,36 @@
-streamlit>=1.50
-openai>=1.40
-pymupdf>=1.24.10
-numpy>=1.26
-python-dotenv>=1.0
+# Web Application
+flask==3.1.2
+
+# HTTP Clients
+requests==2.32.5
+httpx==0.28.1
+
+# Environment Variables
+python-dotenv==1.1.1
+
+# AI / LLM
+openai>=1.100.0
+
+# Agent Framework
+langchain>=0.3.27
+langgraph>=0.6.10
+
+# RAG
+chromadb>=1.0.20
+sentence-transformers>=5.1.0
+
+# Data Models
+pydantic>=2.11.7
+
+# Data Processing
+pandas>=2.3.2
+numpy>=2.3.3
+
+# Logging
+loguru>=0.7.3
+
+# Database (future use)
+sqlalchemy>=2.0.43
+
+# Testing
+pytest>=8.4.2
